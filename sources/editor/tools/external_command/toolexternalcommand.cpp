@@ -98,7 +98,7 @@ void ToolExternalCommand::process(SoundfontManager * sm, EltID id, AbstractToolP
     QString pathTempFile;
     if (tempFile->open())
     {
-        QString pathTempFile = tempFile->fileName();
+        pathTempFile = tempFile->fileName();
         tempFile->close();
     }
     else
