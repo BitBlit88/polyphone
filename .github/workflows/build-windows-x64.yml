@@ -131,36 +131,7 @@ jobs:
           $portableName = "Polyphone_${{ inputs.tag }}-windows_x64-portable"
           Compress-Archive -Path deploy\* -DestinationPath "$portableName.zip" -CompressionLevel Optimal
           Write-Host "Created portable archive: $portableName.zip"
-
-      - name: Install Inno Setup
-        run: choco install innosetup -y
-
-      - name: Download Inno Setup extra translations
-        shell: pwsh
-        run: |
-          $url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl"
-          $destination = "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
-          Invoke-WebRequest -Uri $url -OutFile $destination
-          Write-Host "ChineseSimplified.isl downloaded successfully"
           
-          $url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/SerbianCyrillic.isl"
-          $destination = "C:\Program Files (x86)\Inno Setup 6\Languages\SerbianCyrillic.isl"
-          Invoke-WebRequest -Uri $url -OutFile $destination
-          Write-Host "SerbianCyrillic.isl downloaded successfully"
-
-      - name: Create installer
-        run: |
-          iscc /DMyAppVersion=${{ inputs.tag }} /DSourceDir=../../deploy packaging/windows/polyphone.iss
-
-      - name: Upload installer artifact
-        id: upload-installer-artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: polyphone-windows-x64-installer
-          path: packaging/windows/*.exe
-          retention-days: 7
-          if-no-files-found: error
-
       - name: Upload portable artifact
         id: upload-portable-artifact
         uses: actions/upload-artifact@v4
@@ -170,40 +141,3 @@ jobs:
           retention-days: 7
           if-no-files-found: error
           
-      - name: Sign the installer artifact
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: polyphone
-          signing-policy-slug: release-signing
-          artifact-configuration-slug: windows-installer
-          wait-for-completion: true
-          github-artifact-id: '${{ steps.upload-installer-artifact.outputs.artifact-id }}'
-          output-artifact-directory: 'signed'
-          
-      - name: Sign the portable artifact
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: polyphone
-          signing-policy-slug: release-signing
-          artifact-configuration-slug: windows-portable
-          wait-for-completion: true
-          github-artifact-id: '${{ steps.upload-portable-artifact.outputs.artifact-id }}'
-          output-artifact-directory: 'signed'
-
-      - name: Upload the signed installer as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          path: "signed/*.exe"
-          name: polyphone-windows-x64-installer-signed
-          if-no-files-found: error
-
-      - name: Upload the signed archive as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          path: "signed/*.zip"
-          name: polyphone-windows-x64-portable-signed
-          if-no-files-found: error
